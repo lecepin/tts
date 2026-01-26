@@ -32,6 +32,16 @@ jobs:
 
       - name: Build
         run: pnpm run build 
+
+      - name: zip
+        shell: bash
+        run: |
+          cd dist
+          if [ "${{ matrix.platform }}" == "windows-latest" ]; then
+            7z a ../release-win.zip *.exe
+          else
+            zip ../release-mac.zip *.dmg
+          fi
         
       - name: Upload Artifacts
         shell: bash
