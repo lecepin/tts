@@ -31,11 +31,4 @@ jobs:
         run: mkdir -p models && cd models && curl -LO https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-zh-aishell3.tar.bz2 && tar xvf vits-zh-aishell3.tar.bz2
 
       - name: Build
-        run: pnpm run pack
-      - name: Upload artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: ${{ matrix.os }}
-          path: |
-            ./packs/**/*.dmg
-            ./packs/**/*.exe 
+        run: pnpm run pack 
