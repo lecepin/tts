@@ -2,7 +2,7 @@
 
 # 定义路径和后缀的数组
 paths=(
-    "./src-tauri/target/release/bundle/dmg"
+    "./dist"
 )
 extensions=(
     "dmg"

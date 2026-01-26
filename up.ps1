@@ -1,7 +1,6 @@
 # 定义路径和后缀的哈希表
 $paths_extensions = @{
-  "src-tauri/target/release/bundle/nsis" = "exe"
-  "src-tauri/target/release/bundle/msi" = "msi"
+  "dist" = "exe"
 }
 
 # 获取当前时间戳
