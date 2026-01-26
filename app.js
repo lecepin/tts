@@ -6,7 +6,7 @@ const { execSync } = require('child_process');
 
 /**
  * # 创建模型目录
-mkdir -p models
+mkdir -p models && cd models && curl -LO https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-zh-aishell3.tar.bz2 && tar xvf vits-zh-aishell3.tar.bz2
 cd models
 
 # 使用 curl 下载模型
