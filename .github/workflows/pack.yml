@@ -1,18 +1,31 @@
 name: Build Pack
 on:
   workflow_dispatch:
-
+  
 jobs:
-  build:
-    runs-on: ${{ matrix.os }}
+  release:
     strategy:
+      fail-fast: false
       matrix:
-        os: [windows-latest, macOS-latest]
+        platform: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.platform }}
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Install dependencies
-        run: npm i -g pnpm && pnpm i
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+          run_install: false
+
+      - name: Install frontend dependencies
+        run: pnpm i       
 
       - name: Download models
         run: mkdir -p models && cd models && curl -LO https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-zh-aishell3.tar.bz2 && tar xvf vits-zh-aishell3.tar.bz2
@@ -25,4 +38,4 @@ jobs:
           name: ${{ matrix.os }}
           path: |
             ./packs/**/*.dmg
-            ./packs/**/*.exe
+            ./packs/**/*.exe 
