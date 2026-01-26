@@ -38,9 +38,9 @@ jobs:
         run: |
           cd dist
           if [ "${{ matrix.platform }}" == "windows-latest" ]; then
-            7z a ../release-win.zip *.exe
+            7z a ./release-win.zip *.exe
           else
-            zip ../release-mac.zip *.dmg
+            zip ./release-mac.zip *.dmg
           fi
           ls -l
         
