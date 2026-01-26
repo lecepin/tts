@@ -20,6 +20,7 @@
     "electron-builder": "^24.9.1"
   },
   "build": {
+		"publish": null,
     "appId": "com.tts.electron",
     "productName": "TTS语音合成",
     "directories": {
