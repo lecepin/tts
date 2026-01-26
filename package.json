@@ -1,0 +1,60 @@
+{
+  "name": "tts-electron",
+  "version": "1.0.0",
+  "description": "文本转语音桌面应用",
+  "main": "main.js",
+  "scripts": {
+    "start": "DYLD_LIBRARY_PATH=$(pwd)/node_modules/.pnpm/sherpa-onnx-node@1.12.23/node_modules/sherpa-onnx-darwin-arm64:$DYLD_LIBRARY_PATH electron .",
+    "rebuild": "npx @electron/rebuild -f -w sherpa-onnx-node",
+    "build": "npm run rebuild && electron-builder",
+    "build:mac": "npm run rebuild && electron-builder --mac",
+    "build:win": "electron-builder --win",
+    "build:linux": "electron-builder --linux"
+  },
+  "dependencies": {
+    "sherpa-onnx-node": "^1.12.23"
+  },
+  "devDependencies": {
+    "@electron/rebuild": "3.6.0",
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
+  },
+  "build": {
+    "appId": "com.tts.electron",
+    "productName": "TTS语音合成",
+    "directories": {
+      "output": "dist"
+    },
+    "asar": true,
+    "asarUnpack": [
+      "node_modules/sherpa-onnx-node/**/*",
+      "node_modules/sherpa-onnx-darwin-arm64/**/*",
+      "node_modules/sherpa-onnx-darwin-x64/**/*",
+      "node_modules/sherpa-onnx-win-x64/**/*",
+      "node_modules/sherpa-onnx-linux-x64/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "models/vits-zh-aishell3",
+        "to": "models/vits-zh-aishell3"
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.utilities",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64"
+          ]
+        }
+      ]
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
+  }
+}
