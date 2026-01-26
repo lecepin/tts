@@ -1,6 +1,6 @@
 # 定义路径和后缀的哈希表
 $paths_extensions = @{
-  "dist" = "exe"
+  "dist" = "zip"
 }
 
 # 获取当前时间戳

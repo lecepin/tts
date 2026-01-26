@@ -42,6 +42,7 @@ jobs:
           else
             zip ../release-mac.zip *.dmg
           fi
+          ls -l
         
       - name: Upload Artifacts
         shell: bash

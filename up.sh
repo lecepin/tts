@@ -5,7 +5,7 @@ paths=(
     "./dist"
 )
 extensions=(
-    "dmg"
+    "zip"
 )
 
 # 获取当前时间戳
