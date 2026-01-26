@@ -31,4 +31,4 @@ jobs:
         run: mkdir -p models && cd models && curl -LO https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-zh-aishell3.tar.bz2 && tar xvf vits-zh-aishell3.tar.bz2
 
       - name: Build
-        run: pnpm run pack 
+        run: pnpm run build 
