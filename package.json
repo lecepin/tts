@@ -27,7 +27,7 @@
   },
   "build": {
     "publish": null,
-    "appId": "com.tts.electron",
+    "appId": "com.leping.tts",
     "productName": "TTS语音合成",
     "directories": {
       "output": "dist"
