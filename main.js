@@ -1,9 +1,12 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
 const { execSync } = require('child_process');
 const Module = require('module');
+
+Menu.setApplicationMenu(null);
+
 
 let mainWindow;
 let tts;
@@ -125,7 +128,7 @@ function initTTS() {
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 500,
-    height: 450,
+    height: 500,
     resizable: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
