@@ -26,11 +26,11 @@ const config = {
       tokens: './models/vits-zh-aishell3/tokens.txt',          // tokens 文件路径
       lexicon: './models/vits-zh-aishell3/lexicon.txt',        // 词典文件路径（可选）
     },
-    numThreads: 2,      // 使用的线程数
+    numThreads: 0,      // 使用的线程数
     debug: false,       // 是否开启调试模式
     provider: 'cpu',    // 使用 CPU 推理
   },
-  maxNumSentences: 1,   // 每次处理的最大句子数
+  // maxNumSentences: 1,   // 每次处理的最大句子数
 };
 
 // 创建 TTS 实例
