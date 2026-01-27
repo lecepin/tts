@@ -26,7 +26,6 @@
     "electron-builder": "^24.9.1"
   },
   "build": {
-    "publish": null,
     "appId": "com.leping.tts",
     "productName": "TTS语音合成",
     "directories": {
