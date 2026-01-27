@@ -15,17 +15,19 @@
     "sherpa-onnx-node": "^1.12.23"
   },
   "optionalDependencies": {
-    "sherpa-onnx-win-x64": "^1.12.23",
     "sherpa-onnx-darwin-arm64": "^1.12.23",
     "sherpa-onnx-darwin-x64": "^1.12.23",
-    "sherpa-onnx-linux-x64": "^1.12.23"
+    "sherpa-onnx-linux-x64": "^1.12.23",
+    "sherpa-onnx-win-x64": "^1.12.23"
   },
   "devDependencies": {
     "@electron/rebuild": "3.6.0",
+    "archiver": "^7.0.1",
     "electron": "^28.0.0",
     "electron-builder": "^24.9.1"
   },
   "build": {
+    "publish": null,
     "appId": "com.leping.tts",
     "productName": "TTS语音合成",
     "directories": {

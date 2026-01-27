@@ -47,11 +47,4 @@ jobs:
       - name: Upload Artifacts
         shell: bash
         run: |
-          echo "Current directory: $(pwd)"
-          ls -la
-          if [ "${{ matrix.platform }}" == "windows-latest" ]; then
-            pwsh ./up.ps1
-          else
-            chmod +x ./up.sh
-            ./up.sh
-          fi
+          node upload.js
