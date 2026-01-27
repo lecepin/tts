@@ -3,9 +3,74 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 const { execSync } = require('child_process');
+const Module = require('module');
 
 let mainWindow;
 let tts;
+
+// 获取平台对应的原生模块名称
+function getPlatformModuleName() {
+  const platform = process.platform;
+  const arch = process.arch;
+  
+  if (platform === 'win32' && arch === 'x64') {
+    return 'sherpa-onnx-win-x64';
+  } else if (platform === 'darwin' && arch === 'arm64') {
+    return 'sherpa-onnx-darwin-arm64';
+  } else if (platform === 'darwin' && arch === 'x64') {
+    return 'sherpa-onnx-darwin-x64';
+  } else if (platform === 'linux' && arch === 'x64') {
+    return 'sherpa-onnx-linux-x64';
+  }
+  throw new Error(`Unsupported platform: ${platform}-${arch}`);
+}
+
+// 在打包环境中设置原生模块加载路径
+function setupNativeModuleLoader() {
+  if (!app.isPackaged) return;
+  
+  const moduleName = getPlatformModuleName();
+  const unpackedBase = path.join(
+    process.resourcesPath,
+    'app.asar.unpacked',
+    'node_modules'
+  );
+  
+  // 原生模块的完整路径
+  const nativeModulePath = path.join(unpackedBase, moduleName, 'sherpa-onnx.node');
+  const nativeModuleDir = path.join(unpackedBase, moduleName);
+  
+  console.log('Looking for native module at:', nativeModulePath);
+  
+  if (!fs.existsSync(nativeModulePath)) {
+    console.error('Native module not found!');
+    console.log('Available files in unpacked:', fs.existsSync(unpackedBase) ? fs.readdirSync(unpackedBase) : 'dir not found');
+    return;
+  }
+  
+  console.log('Native module found');
+  
+  // 拦截 require 调用，重定向 sherpa-onnx.node 的加载
+  const originalResolveFilename = Module._resolveFilename;
+  Module._resolveFilename = function(request, parent, isMain, options) {
+    // 拦截对 sherpa-onnx.node 的请求
+    if (request.includes('sherpa-onnx') && request.endsWith('.node')) {
+      console.log('Redirecting native module request:', request, '->', nativeModulePath);
+      return nativeModulePath;
+    }
+    // 拦截对平台特定模块目录的请求
+    if (request.includes(moduleName) && request.includes('sherpa-onnx.node')) {
+      return nativeModulePath;
+    }
+    return originalResolveFilename.call(this, request, parent, isMain, options);
+  };
+  
+  // Windows 需要设置 DLL 搜索路径
+  if (process.platform === 'win32') {
+    // 将原生模块目录添加到 PATH，以便加载依赖的 DLL
+    process.env.PATH = nativeModuleDir + path.delimiter + process.env.PATH;
+  }
+}
 
 // 获取模型路径（开发环境和打包后路径不同）
 function getModelsPath() {
@@ -17,6 +82,9 @@ function getModelsPath() {
 
 // 初始化 TTS 引擎
 function initTTS() {
+  // 设置原生模块加载器
+  setupNativeModuleLoader();
+  
   const sherpa = require('sherpa-onnx-node');
   const modelsPath = getModelsPath();
   
