@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, Menu, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu, dialog, screen, desktopCapturer } = require('electron');
 const XLSX = require('xlsx');
 const path = require('path');
 const fs = require('fs');
@@ -10,6 +10,7 @@ Menu.setApplicationMenu(null);
 
 
 let mainWindow;
+let selectionWindow;
 let tts;
 
 // 获取平台对应的原生模块名称
@@ -311,6 +312,187 @@ ipcMain.handle('download-template', async () => {
     XLSX.writeFile(workbook, result.filePath);
 
     return { success: true, filePath: result.filePath };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+// 选择屏幕区域
+ipcMain.handle('select-capture-area', async () => {
+  return new Promise((resolve) => {
+    // 获取主显示器信息
+    const primaryDisplay = screen.getPrimaryDisplay();
+    const { width, height } = primaryDisplay.size;
+    const scaleFactor = primaryDisplay.scaleFactor;
+
+    // 创建全屏透明窗口用于选择区域（从屏幕原点开始）
+    selectionWindow = new BrowserWindow({
+      x: 0,
+      y: 0,
+      width: width,
+      height: height,
+      frame: false,
+      transparent: true,
+      alwaysOnTop: true,
+      skipTaskbar: true,
+      resizable: false,
+      movable: false,
+      webPreferences: {
+        nodeIntegration: true,
+        contextIsolation: false,
+      }
+    });
+
+    // 加载选择区域的 HTML
+    selectionWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body {
+            width: 100vw;
+            height: 100vh;
+            cursor: crosshair;
+            background: rgba(0, 0, 0, 0.3);
+            user-select: none;
+          }
+          #selection {
+            position: absolute;
+            border: 2px dashed #667eea;
+            background: rgba(102, 126, 234, 0.2);
+            display: none;
+          }
+          #info {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 14px;
+          }
+        </style>
+      </head>
+      <body>
+        <div id="info">拖动鼠标选择要捕捉的区域，按 ESC 取消</div>
+        <div id="selection"></div>
+        <script>
+          const { ipcRenderer } = require('electron');
+          const selection = document.getElementById('selection');
+          let startX, startY, startScreenX, startScreenY, isSelecting = false;
+
+          document.addEventListener('mousedown', (e) => {
+            isSelecting = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            startScreenX = e.screenX;
+            startScreenY = e.screenY;
+            selection.style.left = startX + 'px';
+            selection.style.top = startY + 'px';
+            selection.style.width = '0';
+            selection.style.height = '0';
+            selection.style.display = 'block';
+          });
+
+          document.addEventListener('mousemove', (e) => {
+            if (!isSelecting) return;
+            const currentX = e.clientX;
+            const currentY = e.clientY;
+            const left = Math.min(startX, currentX);
+            const top = Math.min(startY, currentY);
+            const width = Math.abs(currentX - startX);
+            const height = Math.abs(currentY - startY);
+            selection.style.left = left + 'px';
+            selection.style.top = top + 'px';
+            selection.style.width = width + 'px';
+            selection.style.height = height + 'px';
+          });
+
+          document.addEventListener('mouseup', (e) => {
+            if (!isSelecting) return;
+            isSelecting = false;
+            const currentScreenX = e.screenX;
+            const currentScreenY = e.screenY;
+            const selectedBounds = {
+              x: Math.min(startScreenX, currentScreenX) * ${scaleFactor},
+              y: Math.min(startScreenY, currentScreenY) * ${scaleFactor},
+              width: Math.abs(currentScreenX - startScreenX) * ${scaleFactor},
+              height: Math.abs(currentScreenY - startScreenY) * ${scaleFactor}
+            };
+            if (selectedBounds.width > 10 && selectedBounds.height > 10) {
+              ipcRenderer.send('area-selected', selectedBounds);
+            }
+          });
+
+          document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+              ipcRenderer.send('area-selected', null);
+            }
+          });
+        </script>
+      </body>
+      </html>
+    `)}`);
+
+    // 监听选择结果
+    ipcMain.once('area-selected', (event, bounds) => {
+      if (selectionWindow) {
+        selectionWindow.close();
+        selectionWindow = null;
+      }
+      if (bounds) {
+        resolve({ success: true, bounds });
+      } else {
+        resolve({ success: false, canceled: true });
+      }
+    });
+
+    selectionWindow.on('closed', () => {
+      selectionWindow = null;
+    });
+  });
+});
+
+// 截取指定区域
+ipcMain.handle('capture-area', async (event, bounds) => {
+  try {
+    const primaryDisplay = screen.getPrimaryDisplay();
+    const { width, height } = primaryDisplay.size;
+    const scaleFactor = primaryDisplay.scaleFactor;
+
+    // 获取屏幕截图
+    const sources = await desktopCapturer.getSources({
+      types: ['screen'],
+      thumbnailSize: { width: width * scaleFactor, height: height * scaleFactor }
+    });
+
+    if (sources.length === 0) {
+      return { success: false, error: '无法获取屏幕截图' };
+    }
+
+    const screenshot = sources[0].thumbnail;
+    
+    // 裁剪指定区域
+    const cropped = screenshot.crop({
+      x: Math.round(bounds.x),
+      y: Math.round(bounds.y),
+      width: Math.round(bounds.width),
+      height: Math.round(bounds.height)
+    });
+
+    // 转换为 PNG base64
+    const pngBuffer = cropped.toPNG();
+    const base64 = pngBuffer.toString('base64');
+
+    return {
+      success: true,
+      imageData: base64,
+      buffer: pngBuffer
+    };
   } catch (error) {
     return { success: false, error: error.message };
   }

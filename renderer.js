@@ -34,7 +34,8 @@ const STORAGE_KEYS = {
   TEXT: 'tts_text',
   VOICE: 'tts_voice',
   SPEED: 'tts_speed',
-  EXCEL_PATH: 'tts_excel_path'
+  EXCEL_PATH: 'tts_excel_path',
+  CAPTURE_INTERVAL: 'tts_capture_interval'
 };
 
 // 当前播放状态
@@ -397,7 +398,243 @@ generateBtn.addEventListener('click', async () => {
   }
 });
 
+// ==================== 捕捉 Tab ====================
+const selectAreaBtn = document.getElementById('selectAreaBtn');
+const startCaptureBtn = document.getElementById('startCaptureBtn');
+const stopCaptureBtn = document.getElementById('stopCaptureBtn');
+const captureIntervalInput = document.getElementById('captureInterval');
+const captureAreaInfo = document.getElementById('captureAreaInfo');
+const captureStatus = document.getElementById('captureStatus');
+const captureCountSpan = document.getElementById('captureCount');
+const consoleOutput = document.getElementById('consoleOutput');
+const clearConsoleBtn = document.getElementById('clearConsoleBtn');
+const screenshotBody = document.getElementById('screenshotBody');
+
+// 捕捉状态
+let captureArea = null;
+let captureIntervalTimer = null;
+let captureCount = 0;
+
+// 获取识别间隔（毫秒）
+function getCaptureIntervalMs() {
+  const seconds = parseFloat(captureIntervalInput.value) || 2;
+  return Math.max(500, seconds * 1000); // 最小 500ms
+}
+
+// 加载保存的识别频率
+function loadCaptureInterval() {
+  const savedInterval = localStorage.getItem(STORAGE_KEYS.CAPTURE_INTERVAL);
+  if (savedInterval !== null) {
+    captureIntervalInput.value = savedInterval;
+  }
+}
+
+// 保存识别频率
+function saveCaptureInterval() {
+  localStorage.setItem(STORAGE_KEYS.CAPTURE_INTERVAL, captureIntervalInput.value);
+}
+
+// 监听频率输入变化
+captureIntervalInput.addEventListener('change', saveCaptureInterval);
+captureIntervalInput.addEventListener('input', saveCaptureInterval);
+
+// 更新截图预览
+function updateScreenshotPreview(base64Image) {
+  screenshotBody.innerHTML = `<img src="data:image/png;base64,${base64Image}" alt="截图预览">`;
+}
+
+// 添加日志到控制台
+function addLog(type, content) {
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('zh-CN', { hour12: false });
+  
+  let logHtml = '';
+  switch (type) {
+    case 'info':
+      logHtml = `<span class="log-time">[${timeStr}]</span> <span class="log-info">[信息]</span> ${escapeHtml(content)}\n`;
+      break;
+    case 'ocr':
+      logHtml = `<span class="log-time">[${timeStr}]</span> <span class="log-info">[OCR]</span> <span class="log-content">${escapeHtml(content)}</span>\n`;
+      break;
+    case 'error':
+      logHtml = `<span class="log-time">[${timeStr}]</span> <span class="log-error">[错误]</span> ${escapeHtml(content)}\n`;
+      break;
+    default:
+      logHtml = `<span class="log-time">[${timeStr}]</span> ${escapeHtml(content)}\n`;
+  }
+  
+  consoleOutput.innerHTML += logHtml;
+  consoleOutput.scrollTop = consoleOutput.scrollHeight;
+}
+
+// 清空控制台
+clearConsoleBtn.addEventListener('click', () => {
+  consoleOutput.innerHTML = '';
+  addLog('info', '控制台已清空');
+});
+
+// 选择区域按钮
+selectAreaBtn.addEventListener('click', async () => {
+  addLog('info', '正在选择捕捉区域...');
+  
+  const result = await window.ttsAPI.selectCaptureArea();
+  
+  if (result.success) {
+    captureArea = result.bounds;
+    const areaText = `${Math.round(captureArea.width)}x${Math.round(captureArea.height)} @ (${Math.round(captureArea.x)}, ${Math.round(captureArea.y)})`;
+    captureAreaInfo.textContent = areaText;
+    startCaptureBtn.disabled = false;
+    addLog('info', `区域已选择: ${areaText}`);
+    
+    // 立即截图并显示预览
+    addLog('info', '正在截取预览...');
+    const captureResult = await window.ttsAPI.captureArea(captureArea);
+    if (captureResult.success) {
+      updateScreenshotPreview(captureResult.imageData);
+      addLog('info', '预览已更新');
+    } else {
+      addLog('error', '截取预览失败: ' + captureResult.error);
+    }
+  } else if (!result.canceled) {
+    addLog('error', '选择区域失败');
+  } else {
+    addLog('info', '已取消选择');
+  }
+});
+
+// 开始识别按钮
+startCaptureBtn.addEventListener('click', () => {
+  if (!captureArea) {
+    addLog('error', '请先选择捕捉区域');
+    return;
+  }
+  
+  startCapture();
+});
+
+// 停止识别按钮
+stopCaptureBtn.addEventListener('click', () => {
+  stopCapture();
+});
+
+// 开始捕捉
+function startCapture() {
+  if (captureIntervalTimer) return;
+  
+  const intervalMs = getCaptureIntervalMs();
+  addLog('info', `开始识别，间隔 ${intervalMs / 1000} 秒`);
+  
+  // 更新 UI
+  startCaptureBtn.style.display = 'none';
+  stopCaptureBtn.style.display = 'inline-block';
+  selectAreaBtn.disabled = true;
+  captureIntervalInput.disabled = true;
+  captureStatus.textContent = '运行中';
+  captureStatus.classList.remove('inactive');
+  captureStatus.classList.add('active');
+  
+  // 立即执行一次
+  performCapture();
+  
+  // 定时执行
+  captureIntervalTimer = setInterval(performCapture, intervalMs);
+}
+
+// 停止捕捉
+function stopCapture() {
+  if (captureIntervalTimer) {
+    clearInterval(captureIntervalTimer);
+    captureIntervalTimer = null;
+  }
+  
+  addLog('info', '已停止识别');
+  
+  // 更新 UI
+  startCaptureBtn.style.display = 'inline-block';
+  stopCaptureBtn.style.display = 'none';
+  selectAreaBtn.disabled = false;
+  captureIntervalInput.disabled = false;
+  captureStatus.textContent = '已停止';
+  captureStatus.classList.remove('active');
+  captureStatus.classList.add('inactive');
+}
+
+// 执行一次捕捉和 OCR
+async function performCapture() {
+  try {
+    // 截图
+    const captureResult = await window.ttsAPI.captureArea(captureArea);
+    
+    if (!captureResult.success) {
+      addLog('error', `截图失败: ${captureResult.error}`);
+      return;
+    }
+    
+    captureCount++;
+    captureCountSpan.textContent = captureCount;
+    
+    // 更新截图预览
+    updateScreenshotPreview(captureResult.imageData);
+    
+    addLog('info', `第 ${captureCount} 次截图完成，正在识别...`);
+    
+    // 调用 OCR 接口
+    const ocrResult = await callOCR(captureResult.imageData);
+    
+    if (ocrResult.success) {
+      const words = ocrResult.words.join(' | ');
+      addLog('ocr', words || '(无识别结果)');
+    } else {
+      addLog('error', `OCR 失败: ${ocrResult.error}`);
+    }
+    
+  } catch (error) {
+    addLog('error', `捕捉出错: ${error.message}`);
+  }
+}
+
+// 调用 OCR 接口
+async function callOCR(base64Image) {
+  try {
+    // 将 base64 转换为 Blob
+    const byteCharacters = atob(base64Image);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type: 'image/png' });
+    
+    // 创建 FormData
+    const formData = new FormData();
+    formData.append('img', blob, 'image.png');
+    
+    // 调用接口
+    const response = await fetch('https://apis.leping.fun/ocr/?get=1&fn=basicAccurate', {
+      method: 'POST',
+      body: formData
+    });
+    
+    if (!response.ok) {
+      return { success: false, error: `HTTP ${response.status}` };
+    }
+    
+    const data = await response.json();
+    
+    if (data.words_result) {
+      const words = data.words_result.map(item => item.words);
+      return { success: true, words };
+    } else {
+      return { success: false, error: '无识别结果' };
+    }
+    
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
 // ==================== 初始化 ====================
 initVoiceSelect();
 loadSettings();
 initExcelData();
+loadCaptureInterval();

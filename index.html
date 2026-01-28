@@ -362,6 +362,221 @@
     .status.success {
       color: #27ae60;
     }
+
+    /* 捕捉 Tab 样式 */
+    .capture-toolbar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+    }
+
+    .capture-btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .capture-btn.primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .capture-btn.primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .capture-btn.success {
+      background: linear-gradient(135deg, #27ae60 0%, #1e8449 100%);
+      color: white;
+    }
+
+    .capture-btn.success:hover {
+      box-shadow: 0 4px 12px rgba(39, 174, 96, 0.4);
+    }
+
+    .capture-btn.danger {
+      background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+      color: white;
+    }
+
+    .capture-btn.danger:hover {
+      box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4);
+    }
+
+    .capture-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .capture-info {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 15px;
+      padding: 12px;
+      background: #f8f8f8;
+      border-radius: 8px;
+      font-size: 13px;
+    }
+
+    .capture-info-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .capture-info-item .label {
+      color: #888;
+    }
+
+    .capture-info-item .value {
+      color: #333;
+      font-weight: 500;
+    }
+
+    .capture-info-item .value.active {
+      color: #27ae60;
+    }
+
+    .capture-info-item .value.inactive {
+      color: #e74c3c;
+    }
+
+    .console-container {
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .console-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 15px;
+      background: #f8f8f8;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .console-header h3 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #555;
+    }
+
+    .console-clear-btn {
+      padding: 4px 10px;
+      background: #e0e0e0;
+      border: none;
+      border-radius: 4px;
+      font-size: 12px;
+      color: #666;
+      cursor: pointer;
+    }
+
+    .console-clear-btn:hover {
+      background: #d0d0d0;
+    }
+
+    .console-output {
+      height: 300px;
+      padding: 12px;
+      background: #1e1e1e;
+      color: #d4d4d4;
+      font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .console-output .log-time {
+      color: #6a9955;
+    }
+
+    .console-output .log-info {
+      color: #569cd6;
+    }
+
+    .console-output .log-content {
+      color: #ce9178;
+    }
+
+    .console-output .log-error {
+      color: #f44747;
+    }
+
+    .capture-settings {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .capture-settings label {
+      margin-bottom: 0;
+      white-space: nowrap;
+    }
+
+    .capture-settings input[type="number"] {
+      width: 80px;
+      padding: 8px 12px;
+    }
+
+    .capture-settings .unit {
+      color: #888;
+      font-size: 13px;
+    }
+
+    .screenshot-preview {
+      margin-bottom: 15px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .screenshot-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 15px;
+      background: #f8f8f8;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .screenshot-header h3 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #555;
+    }
+
+    .screenshot-body {
+      padding: 15px;
+      background: #fafafa;
+      min-height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .screenshot-body img {
+      max-width: 100%;
+      max-height: 150px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    .screenshot-body .placeholder {
+      color: #aaa;
+      font-size: 13px;
+    }
   </style>
 </head>
 <body>
@@ -369,6 +584,7 @@
     <!-- Tab 导航 -->
     <div class="tabs">
       <button class="tab-btn active" data-tab="normal">常规</button>
+      <button class="tab-btn" data-tab="capture">捕捉</button>
       <button class="tab-btn" data-tab="test">测试</button>
     </div>
 
@@ -398,6 +614,53 @@
           <tbody id="dataBody">
           </tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- 捕捉 Tab -->
+    <div id="capture-tab" class="tab-content">
+      <div class="capture-toolbar">
+        <button class="capture-btn primary" id="selectAreaBtn">🎯 选择区域</button>
+        <button class="capture-btn success" id="startCaptureBtn" disabled>▶️ 开始识别</button>
+        <button class="capture-btn danger" id="stopCaptureBtn" style="display: none;">⏹️ 停止识别</button>
+      </div>
+
+      <div class="capture-settings">
+        <label for="captureInterval">识别频率:</label>
+        <input type="number" id="captureInterval" min="0.5" max="30" step="0.5" value="2">
+        <span class="unit">秒/次</span>
+      </div>
+
+      <div class="capture-info">
+        <div class="capture-info-item">
+          <span class="label">区域:</span>
+          <span class="value" id="captureAreaInfo">未选择</span>
+        </div>
+        <div class="capture-info-item">
+          <span class="label">状态:</span>
+          <span class="value inactive" id="captureStatus">未运行</span>
+        </div>
+        <div class="capture-info-item">
+          <span class="label">识别次数:</span>
+          <span class="value" id="captureCount">0</span>
+        </div>
+      </div>
+
+      <div class="screenshot-preview">
+        <div class="screenshot-header">
+          <h3>📷 截图预览</h3>
+        </div>
+        <div class="screenshot-body" id="screenshotBody">
+          <span class="placeholder">暂无截图</span>
+        </div>
+      </div>
+
+      <div class="console-container">
+        <div class="console-header">
+          <h3>📋 识别日志</h3>
+          <button class="console-clear-btn" id="clearConsoleBtn">清空</button>
+        </div>
+        <div class="console-output" id="consoleOutput">等待开始识别...</div>
       </div>
     </div>
 

@@ -20,5 +20,15 @@ contextBridge.exposeInMainWorld('ttsAPI', {
   // 下载模板文件
   downloadTemplate: () => {
     return ipcRenderer.invoke('download-template');
+  },
+
+  // 选择屏幕区域
+  selectCaptureArea: () => {
+    return ipcRenderer.invoke('select-capture-area');
+  },
+
+  // 截取指定区域
+  captureArea: (bounds) => {
+    return ipcRenderer.invoke('capture-area', bounds);
   }
 });
