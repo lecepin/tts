@@ -1,4 +1,5 @@
-const { app, BrowserWindow, ipcMain, Menu } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu, dialog } = require('electron');
+const XLSX = require('xlsx');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
@@ -127,9 +128,9 @@ function initTTS() {
 // 创建主窗口
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 500,
-    height: 500,
-    resizable: false,
+    width: 650,
+    height: 650,
+    resizable: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -202,6 +203,114 @@ ipcMain.handle('generate-tts', async (event, { text, sid, speed }) => {
       samples: samples,
       sampleRate: audio.sampleRate
     };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+// 打开文件选择对话框
+ipcMain.handle('open-file-dialog', async () => {
+  const result = await dialog.showOpenDialog(mainWindow, {
+    properties: ['openFile'],
+    filters: [
+      { name: 'Excel 文件', extensions: ['xls', 'xlsx'] }
+    ]
+  });
+
+  if (result.canceled || result.filePaths.length === 0) {
+    return { success: false, canceled: true };
+  }
+
+  const filePath = result.filePaths[0];
+  
+  // 读取并解析 Excel 文件
+  try {
+    const data = readExcelFile(filePath);
+    return { success: true, filePath, data };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+// 读取 Excel 文件
+ipcMain.handle('read-excel', async (event, filePath) => {
+  try {
+    if (!fs.existsSync(filePath)) {
+      return { success: false, error: '文件不存在' };
+    }
+    const data = readExcelFile(filePath);
+    return { success: true, data };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+// 解析 Excel 文件
+function readExcelFile(filePath) {
+  const workbook = XLSX.readFile(filePath);
+  const sheetName = workbook.SheetNames[0];
+  const worksheet = workbook.Sheets[sheetName];
+  const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+  
+  // 跳过表头，解析数据
+  const data = [];
+  for (let i = 1; i < jsonData.length; i++) {
+    const row = jsonData[i];
+    if (row && row.length >= 2) {
+      data.push({
+        name: String(row[0] || '').trim(),
+        answer: String(row[1] || '').trim()
+      });
+    }
+  }
+  
+  return data;
+}
+
+// 下载模板文件
+ipcMain.handle('download-template', async () => {
+  const result = await dialog.showSaveDialog(mainWindow, {
+    title: '保存模板文件',
+    defaultPath: '直播话术模板.xlsx',
+    filters: [
+      { name: 'Excel 文件', extensions: ['xlsx'] }
+    ]
+  });
+
+  if (result.canceled || !result.filePath) {
+    return { success: false, canceled: true };
+  }
+
+  try {
+    // 创建模板数据
+    const templateData = [
+      ['名称', '回答'],
+      ['来人了', '欢迎来到直播间。我们的鞋子大家都很喜欢'],
+      ['没货了', '最后十双了，家人们快下单吧，我们今天要停播了'],
+      ['欢迎语', '欢迎新来的宝宝们，点点关注不迷路'],
+      ['感谢关注', '感谢家人们的关注，有什么问题随时问我'],
+      ['促销语', '今天的价格是全网最低价，错过就没有了'],
+      ['催单语', '库存不多了，喜欢的家人们抓紧下单'],
+      ['福利预告', '等会儿还有福利款，家人们不要走开'],
+      ['互动语', '喜欢的家人们扣个1，让我看看有多少人'],
+      ['感谢下单', '感谢家人们的支持，我们会尽快发货'],
+      ['结束语', '今天的直播就到这里了，感谢家人们的陪伴，明天见']
+    ];
+
+    // 创建工作簿
+    const workbook = XLSX.utils.book_new();
+    const worksheet = XLSX.utils.aoa_to_sheet(templateData);
+    
+    // 设置列宽
+    worksheet['!cols'] = [
+      { wch: 12 },  // 名称列宽度
+      { wch: 50 }   // 回答列宽度
+    ];
+    
+    XLSX.utils.book_append_sheet(workbook, worksheet, '直播话术');
+    XLSX.writeFile(workbook, result.filePath);
+
+    return { success: true, filePath: result.filePath };
   } catch (error) {
     return { success: false, error: error.message };
   }

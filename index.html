@@ -26,10 +26,203 @@
       border-radius: 16px;
       padding: 30px;
       width: 100%;
-      max-width: 440px;
+      max-width: 600px;
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     }
 
+    /* Tab 样式 */
+    .tabs {
+      display: flex;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #e0e0e0;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 12px 20px;
+      background: none;
+      border: none;
+      font-size: 15px;
+      font-weight: 500;
+      color: #888;
+      cursor: pointer;
+      transition: all 0.3s;
+      position: relative;
+    }
+
+    .tab-btn:hover {
+      color: #667eea;
+    }
+
+    .tab-btn.active {
+      color: #667eea;
+    }
+
+    .tab-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* 常规 Tab 工具栏 */
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .toolbar-btn {
+      padding: 8px 16px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .toolbar-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .toolbar-btn.secondary {
+      background: #f0f0f0;
+      color: #555;
+    }
+
+    .toolbar-btn.secondary:hover {
+      background: #e0e0e0;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .file-path {
+      flex: 1;
+      padding: 8px 12px;
+      background: #f5f5f5;
+      border-radius: 6px;
+      font-size: 12px;
+      color: #666;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+    }
+
+    /* 数据表格 */
+    .data-table-container {
+      max-height: 400px;
+      overflow-y: auto;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .data-table th,
+    .data-table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .data-table th {
+      background: #f8f8f8;
+      font-weight: 600;
+      color: #555;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    .data-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .data-table tr:hover {
+      background: #f9f9ff;
+    }
+
+    .data-table .name-col {
+      width: 30%;
+      font-weight: 500;
+      color: #333;
+    }
+
+    .data-table .answer-col {
+      width: 60%;
+      color: #555;
+    }
+
+    .data-table .action-col {
+      width: 10%;
+      text-align: center;
+    }
+
+    .play-btn {
+      width: 36px;
+      height: 36px;
+      border: none;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+      transition: transform 0.2s, box-shadow 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .play-btn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .play-btn.playing {
+      background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    }
+
+    .play-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #888;
+    }
+
+    .empty-state .icon {
+      font-size: 48px;
+      margin-bottom: 15px;
+    }
+
+    .empty-state p {
+      margin-bottom: 15px;
+    }
+
+    /* 测试 Tab 样式 */
     h1 {
       text-align: center;
       color: #333;
@@ -125,7 +318,7 @@
       box-shadow: 0 2px 6px rgba(102, 126, 234, 0.4);
     }
 
-    button {
+    button.generate-btn {
       width: 100%;
       padding: 14px;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -138,16 +331,16 @@
       transition: transform 0.2s, box-shadow 0.2s;
     }
 
-    button:hover {
+    button.generate-btn:hover {
       transform: translateY(-2px);
       box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
     }
 
-    button:active {
+    button.generate-btn:active {
       transform: translateY(0);
     }
 
-    button:disabled {
+    button.generate-btn:disabled {
       background: #ccc;
       cursor: not-allowed;
       transform: none;
@@ -173,28 +366,65 @@
 </head>
 <body>
   <div class="container">
-     
-    <div class="form-group">
-      <label for="text">输入文字</label>
-      <textarea id="text" placeholder="请输入要转换的文字..."></textarea>
+    <!-- Tab 导航 -->
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="normal">常规</button>
+      <button class="tab-btn" data-tab="test">测试</button>
     </div>
 
-    <div class="row">
-      <div class="form-group">
-        <label for="voice">音色 (说话人)</label>
-        <select id="voice"></select>
+    <!-- 常规 Tab -->
+    <div id="normal-tab" class="tab-content active">
+      <div class="toolbar">
+        <button class="toolbar-btn" id="openFileBtn">📂 打开文件</button>
+        <button class="toolbar-btn secondary" id="refreshBtn">🔄 刷新</button>
+        <button class="toolbar-btn secondary" id="downloadTemplateBtn">📥 下载模板</button>
+        <div class="file-path" id="filePath">未选择文件</div>
       </div>
+
+      <div class="data-table-container">
+        <div class="empty-state" id="emptyState">
+          <div class="icon">📋</div>
+          <p>请打开一个 Excel 文件 (.xls/.xlsx)</p>
+          <p style="font-size: 12px; color: #aaa;">文件需包含两列：名称、回答</p>
+        </div>
+        <table class="data-table" id="dataTable" style="display: none;">
+          <thead>
+            <tr>
+              <th class="name-col">名称</th>
+              <th class="answer-col">回答</th>
+              <th class="action-col">播放</th>
+            </tr>
+          </thead>
+          <tbody id="dataBody">
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 测试 Tab -->
+    <div id="test-tab" class="tab-content">
+      <div class="form-group">
+        <label for="text">输入文字</label>
+        <textarea id="text" placeholder="请输入要转换的文字..."></textarea>
+      </div>
+
+      <div class="row">
+        <div class="form-group">
+          <label for="voice">音色 (说话人)</label>
+          <select id="voice"></select>
+        </div>
+        
+        <div class="form-group">
+          <label for="speed">语速</label>
+          <input type="range" id="speed" min="0.5" max="2.0" step="0.1" value="1.0">
+          <div class="speed-display" id="speedDisplay">1.0x</div>
+        </div>
+      </div>
+
+      <button class="generate-btn" id="generateBtn">🔊 生成并播放</button>
       
-      <div class="form-group">
-        <label for="speed">语速</label>
-        <input type="range" id="speed" min="0.5" max="2.0" step="0.1" value="1.0">
-        <div class="speed-display" id="speedDisplay">1.0x</div>
-      </div>
+      <div class="status" id="status"></div>
     </div>
-
-    <button id="generateBtn">🔊 生成并播放</button>
-    
-    <div class="status" id="status"></div>
   </div>
 
   <script src="renderer.js"></script>

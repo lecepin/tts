@@ -4,7 +4,7 @@
   "description": "文本转语音桌面应用",
   "main": "main.js",
   "scripts": {
-    "start": "DYLD_LIBRARY_PATH=$(pwd)/node_modules/.pnpm/sherpa-onnx-node@1.12.23/node_modules/sherpa-onnx-darwin-arm64:$DYLD_LIBRARY_PATH electron .",
+    "start": "electron .",
     "rebuild": "npx @electron/rebuild -f -w sherpa-onnx-node",
     "build": "npm run rebuild && electron-builder",
     "build:mac": "npm run rebuild && electron-builder --mac",
@@ -12,7 +12,8 @@
     "build:linux": "electron-builder --linux"
   },
   "dependencies": {
-    "sherpa-onnx-node": "^1.12.23"
+    "sherpa-onnx-node": "^1.12.23",
+    "xlsx": "^0.18.5"
   },
   "optionalDependencies": {
     "sherpa-onnx-darwin-arm64": "^1.12.23",
